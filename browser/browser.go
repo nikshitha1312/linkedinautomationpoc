@@ -89,10 +89,8 @@ func (b *Browser) Launch() error {
 		return fmt.Errorf("failed to launch browser: %w", err)
 	}
 
-	// Connect to browser
-	b.browser = rod.New().
-		ControlURL(url).
-		Timeout(time.Duration(b.config.Browser.Timeout) * time.Second)
+	// Connect to browser - don't set global timeout, use per-operation timeouts instead
+	b.browser = rod.New().ControlURL(url)
 
 	if b.config.Browser.SlowMotion > 0 {
 		b.browser = b.browser.SlowMotion(time.Duration(b.config.Browser.SlowMotion) * time.Millisecond)

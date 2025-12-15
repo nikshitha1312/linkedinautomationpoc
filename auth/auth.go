@@ -89,6 +89,35 @@ func (a *Authenticator) Login() error {
 	if err != nil {
 		return fmt.Errorf("failed to load login page: %w", err)
 	}
+	
+	// Extra wait for dynamic content to load
+	time.Sleep(3 * time.Second)
+	
+	// Check if already logged in (redirected to feed)
+	currentURL := a.page.MustInfo().URL
+	a.logger.WithField("url", currentURL).Debug("Current URL after navigation")
+	
+	if strings.Contains(currentURL, "/feed") || strings.Contains(currentURL, "/mynetwork") || strings.Contains(currentURL, "/in/") {
+		a.logger.Info("Already logged in - redirected to LinkedIn")
+		a.isLoggedIn = true
+		a.saveCookies()
+		return nil
+	}
+	
+	// Wait for the email input to be visible before proceeding
+	a.logger.Debug("Waiting for login form to be ready")
+	_, err = a.page.Timeout(10 * time.Second).Element("#username")
+	if err != nil {
+		// Check again if we got redirected during the wait
+		currentURL = a.page.MustInfo().URL
+		if strings.Contains(currentURL, "/feed") || strings.Contains(currentURL, "/mynetwork") {
+			a.logger.Info("Already logged in - detected after wait")
+			a.isLoggedIn = true
+			a.saveCookies()
+			return nil
+		}
+		a.logger.Warn("Email field not found with #username, page may still be loading")
+	}
 
 	// Apply fingerprint masking
 	a.stealth.ApplyFingerprintMasking(a.page)
@@ -97,63 +126,104 @@ func (a *Authenticator) Login() error {
 	a.stealth.RandomMouseWander(a.page)
 	a.stealth.ThinkingDelay()
 
-	// Enter email
+	// Enter email - use simple direct approach that worked in debug
 	a.logger.Debug("Entering email")
-	emailField, err := a.page.Element("#username")
-	if err != nil {
-		return fmt.Errorf("failed to find email field: %w", err)
+	
+	// Use MustElement with a reasonable timeout - this is the approach that worked
+	var emailField *rod.Element
+	err = rod.Try(func() {
+		emailField = a.page.Timeout(15 * time.Second).MustElement("#username")
+	})
+	
+	if err != nil || emailField == nil {
+		// Try alternative selector
+		a.logger.Debug("Primary selector failed, trying input[name=session_key]")
+		err = rod.Try(func() {
+			emailField = a.page.Timeout(10 * time.Second).MustElement(`input[name="session_key"]`)
+		})
 	}
+	
+	if err != nil || emailField == nil {
+		// Try type=email
+		a.logger.Debug("Trying input[type=email]")
+		err = rod.Try(func() {
+			emailField = a.page.Timeout(10 * time.Second).MustElement(`input[type="email"]`)
+		})
+	}
+	
+	if emailField == nil {
+		return fmt.Errorf("failed to find email field - LinkedIn page may not have loaded correctly")
+	}
+	
+	a.logger.Debug("Found email field, clicking")
 
-	// Click on email field first
-	err = a.stealth.ClickElement(a.page, emailField)
-	if err != nil {
-		return fmt.Errorf("failed to click email field: %w", err)
-	}
+	// Click on email field first - use MustClick for reliability
+	emailField.MustClick()
+	time.Sleep(500 * time.Millisecond)
 
-	// Type email with human-like behavior
-	err = a.stealth.HumanType(a.page, emailField, a.config.LinkedIn.Email)
-	if err != nil {
-		return fmt.Errorf("failed to enter email: %w", err)
-	}
+	// Type email - use simple input for reliability
+	a.logger.Debug("Typing email")
+	emailField.MustSelectAllText().MustInput(a.config.LinkedIn.Email)
 
 	// Small delay before moving to password
-	a.stealth.ActionDelay()
+	time.Sleep(1 * time.Second)
 
 	// Enter password
 	a.logger.Debug("Entering password")
-	passwordField, err := a.page.Element("#password")
-	if err != nil {
-		return fmt.Errorf("failed to find password field: %w", err)
+	var passwordField *rod.Element
+	err = rod.Try(func() {
+		passwordField = a.page.Timeout(10 * time.Second).MustElement("#password")
+	})
+	
+	if err != nil || passwordField == nil {
+		err = rod.Try(func() {
+			passwordField = a.page.Timeout(10 * time.Second).MustElement(`input[name="session_password"]`)
+		})
 	}
-
-	err = a.stealth.ClickElement(a.page, passwordField)
-	if err != nil {
-		return fmt.Errorf("failed to click password field: %w", err)
+	
+	if err != nil || passwordField == nil {
+		err = rod.Try(func() {
+			passwordField = a.page.Timeout(10 * time.Second).MustElement(`input[type="password"]`)
+		})
 	}
-
-	err = a.stealth.HumanType(a.page, passwordField, a.config.LinkedIn.Password)
-	if err != nil {
-		return fmt.Errorf("failed to enter password: %w", err)
+	
+	if passwordField == nil {
+		return fmt.Errorf("failed to find password field")
 	}
+	
+	a.logger.Debug("Found password field, clicking")
+	passwordField.MustClick()
+	time.Sleep(500 * time.Millisecond)
+	
+	a.logger.Debug("Typing password")
+	passwordField.MustSelectAllText().MustInput(a.config.LinkedIn.Password)
 
 	// Thinking delay before submitting
-	a.stealth.ThinkingDelay()
+	time.Sleep(1 * time.Second)
 
 	// Click login button
 	a.logger.Debug("Clicking login button")
-	loginButton, err := a.page.Element(`button[type="submit"]`)
-	if err != nil {
-		return fmt.Errorf("failed to find login button: %w", err)
+	var loginButton *rod.Element
+	err = rod.Try(func() {
+		loginButton = a.page.Timeout(10 * time.Second).MustElement(`button[type="submit"]`)
+	})
+	
+	if err != nil || loginButton == nil {
+		err = rod.Try(func() {
+			loginButton = a.page.Timeout(5 * time.Second).MustElement(`button[data-litms-control-urn="login-submit"]`)
+		})
 	}
-
-	err = a.stealth.ClickElement(a.page, loginButton)
-	if err != nil {
-		return fmt.Errorf("failed to click login button: %w", err)
+	
+	if loginButton == nil {
+		return fmt.Errorf("failed to find login button")
 	}
+	
+	a.logger.Debug("Found login button, clicking")
+	loginButton.MustClick()
 
 	// Wait for navigation
-	a.stealth.PageLoadDelay()
-	time.Sleep(3 * time.Second) // Extra wait for login processing
+	a.logger.Debug("Waiting for login to complete")
+	time.Sleep(5 * time.Second) // Wait for login processing
 
 	// Check login result
 	return a.checkLoginResult()
