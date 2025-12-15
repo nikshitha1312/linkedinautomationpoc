@@ -1,0 +1,96 @@
+# LinkedIn Automation PoC - Configuration File
+# Copy this file to config.yaml and customize as needed
+
+# LinkedIn credentials (can also be set via environment variables)
+linkedin:
+  email: ""  # Set via LINKEDIN_EMAIL env var
+  password: ""  # Set via LINKEDIN_PASSWORD env var
+
+# Browser configuration
+browser:
+  headless: false  # Run browser in headless mode
+  user_data_dir: "./data/browser"  # Store browser data for session persistence
+  slow_motion_ms: 0  # Add delay between browser actions (for debugging)
+  timeout_seconds: 30  # Default timeout for browser operations
+  viewport_width: 1366
+  viewport_height: 768
+
+# Stealth/Anti-detection settings
+stealth:
+  # Mouse movement (Technique 1)
+  mouse_speed_min: 0.5
+  mouse_speed_max: 2.0
+  mouse_overshoot: true
+  mouse_micro_corrections: true
+  
+  # Typing simulation (Technique 5)
+  typing_delay_min_ms: 50
+  typing_delay_max_ms: 200
+  typing_mistake_rate: 0.02  # 2% chance of typo
+  
+  # Scrolling behavior (Technique 4)
+  scroll_speed_min: 100
+  scroll_speed_max: 400
+  scroll_back_chance: 0.15  # 15% chance to scroll back
+  
+  # Timing patterns (Technique 2)
+  action_delay_min_ms: 500
+  action_delay_max_ms: 2000
+  page_load_wait_min_ms: 1000
+  page_load_wait_max_ms: 3000
+  
+  # Fingerprint masking (Technique 3)
+  randomize_viewport: true
+  disable_webdriver: true
+  random_user_agent: true
+
+# Rate limiting (Technique 8)
+rate_limits:
+  max_connections_per_day: 25
+  max_messages_per_day: 50
+  max_profile_views_per_day: 100
+  max_searches_per_hour: 10
+  cooldown_minutes: 5
+  min_delay_between_actions_ms: 2000
+  max_delay_between_actions_ms: 5000
+
+# Search configuration
+search:
+  default_job_title: ""
+  default_company: ""
+  default_location: ""
+  keywords: []
+  max_results_per_search: 25
+
+# Messaging configuration
+messaging:
+  connection_note_template: "Hi {{.FirstName}}, I came across your profile and was impressed by your work. Would love to connect!"
+  follow_up_message_template: "Thanks for connecting, {{.FirstName}}! I'd love to learn more about your experience at {{.Company}}."
+  max_note_length: 300
+  max_message_length: 8000
+
+# Storage configuration
+storage:
+  database_path: "./data/linkedin_automation.db"
+  cookies_path: "./data/cookies.json"
+  backup_enabled: true
+  backup_interval_hours: 24
+
+# Logging configuration
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "text"  # text or json
+  output_file: "./logs/automation.log"
+  max_size_mb: 100
+  max_backups: 5
+
+# Activity scheduling (Technique 7)
+schedule:
+  enabled: true
+  start_hour: 9  # 9 AM
+  end_hour: 18  # 6 PM
+  work_days_only: true  # Only Mon-Fri
+  break_min_minutes: 5
+  break_max_minutes: 15
+  session_max_minutes: 120
+  timezone: "Local"

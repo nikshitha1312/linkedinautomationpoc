@@ -1,0 +1,51 @@
+# Compiled files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files (contains secrets)
+.env
+
+# Data directories (contains personal data)
+data/
+logs/
+
+# Browser data
+browser_data/
+
+# Screenshots
+screenshots/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+bin/
+dist/
+
+# Backup files
+*.bak
+*.backup
