@@ -41,13 +41,16 @@ type Application struct {
 // Command line flags
 var (
 	configPath  = flag.String("config", "config.yaml", "Path to configuration file")
-	mode        = flag.String("mode", "interactive", "Run mode: interactive, search, connect, message, full")
+	mode        = flag.String("mode", "interactive", "Run mode: interactive, search, connect, message, full, demo")
 	searchQuery = flag.String("search", "", "Search query (job title, keywords)")
 	company     = flag.String("company", "", "Company filter for search")
 	location    = flag.String("location", "", "Location filter for search")
 	maxResults  = flag.Int("max-results", 25, "Maximum search results")
 	dryRun      = flag.Bool("dry-run", false, "Dry run mode - no actual actions")
 	verbose     = flag.Bool("verbose", false, "Enable verbose logging")
+	// Demo mode flags
+	demoName        = flag.String("demo-name", "Shreeya Khatri", "Name to search for in demo mode")
+	demoInstitution = flag.String("demo-institution", "IIIT Sonepat", "Institution filter for demo mode")
 )
 
 func main() {
@@ -203,9 +206,31 @@ func (app *Application) Run() error {
 		return app.runMessageMode()
 	case "full":
 		return app.runFullWorkflow()
+	case "demo":
+		return app.runDemoMode()
 	default:
 		return fmt.Errorf("unknown mode: %s", *mode)
 	}
+}
+
+// runDemoMode runs the assignment demo workflow
+// Login → Go to Connections → Filter by institution → Search by name → Open profile
+func (app *Application) runDemoMode() error {
+	app.logger.Info("=== Running Assignment Demo Mode ===")
+	app.logger.Infof("Institution Filter: %s", *demoInstitution)
+	app.logger.Infof("Profile to find: %s", *demoName)
+
+	// Execute the demo workflow
+	if err := app.connector.NavigateAndOpenProfile(*demoInstitution, *demoName); err != nil {
+		return fmt.Errorf("demo workflow failed: %w", err)
+	}
+
+	app.logger.Info("=== Demo Complete! ===")
+	app.logger.Info("Profile opened successfully. Browser will remain open for verification.")
+	app.logger.Info("Press Ctrl+C to exit when done viewing.")
+
+	// Keep browser open for user to view
+	select {}
 }
 
 // runInteractiveMode runs an interactive session

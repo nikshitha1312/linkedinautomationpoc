@@ -86,7 +86,7 @@ logging:
 
 # Activity scheduling (Technique 7)
 schedule:
-  enabled: true
+  enabled: false  # Disabled for testing - set to true for production
   start_hour: 9  # 9 AM
   end_hour: 18  # 6 PM
   work_days_only: true  # Only Mon-Fri
