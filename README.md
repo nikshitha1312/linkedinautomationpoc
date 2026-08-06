@@ -2,19 +2,6 @@
 
 A comprehensive technical proof-of-concept demonstrating advanced browser automation, anti-detection techniques, and clean Go architecture. This project showcases sophisticated automation tools while implementing human-like behavior patterns and stealth mechanisms.
 
----
-
-## ⚠️ Critical Disclaimer
-
-> **EDUCATIONAL PURPOSE ONLY**
-> 
-> This project is designed exclusively for technical evaluation and educational purposes. It demonstrates automation concepts and anti-detection techniques in a controlled environment.
->
-> **TERMS OF SERVICE VIOLATION**: Automating LinkedIn directly violates their Terms of Service. Using such tools on live accounts may result in permanent account bans, legal action, or other consequences.
->
-> **DO NOT USE IN PRODUCTION**: This tool must never be deployed in production environments or used for actual LinkedIn automation.
-
----
 
 ## 🎯 Project Overview
 
